@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+{% block title %}File Re-namer{% endblock %}
+
+{% block main %}
+<div class="container text-white m-8">
+  <form id="directory_search" method="POST">
+    <div class="mb-4">
+      <label for="select_directory" class="block mb-2 text-sm font-medium text-white">Directory:</label>
+      <input type="text" id="select_directory" class="border text-sm rounded-lg block w-full p-2.5 bg-gray-600 border-gray-500 placeholder-gray-300 text-white focus:ring-themeMid focus:border-themeMid focus-visible:outline-none mb-2" required>
+      <div class="block text-right">
+        <button type="submit" class="text-white bg-themeMain hover:bg-themeMain focus:ring-4 focus:ring-themeMid font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-themeMain dark:hover:bg-themeMain focus:outline-none dark:focus:ring-themeMid mb-2">Scan</button>
+      </div>
+    </div>
+  </form>
+  <div class="py-2 px-2 border rounded mb-4">
+    {% for drive in context.drives %}
+    <span class="text-xs font-medium mr-2 px-2.5 py-0.5 rounded bg-purple-900 text-purple-300 cursor-pointer" path="{{drive}}:\" onclick="call_directory(this)">{{drive}}:\</span>
+    {% endfor %}
+    <div id="path-nav-tree"></div>
+    <div id="path-tree"></div>
+  </div>
+  <input type="hidden" name="current_dir" id="current_dir">
+  
+  <div class="block text-right">
+    <label for="rename_style" class="inline mb-2 text-sm font-medium text-white">Rename Style:</label>
+    <input type="text" id="rename_style" class="border text-sm rounded-lg inline w-auto p-2.5 bg-gray-600 border-gray-500 placeholder-gray-300 text-white focus:ring-themeMid focus:border-themeMid focus-visible:outline-none mb-2">
+    <button id="rename_files" class="text-white bg-themeMain hover:bg-themeMain focus:ring-4 focus:ring-themeMid font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-themeMain dark:hover:bg-themeMain focus:outline-none dark:focus:ring-themeMid mb-4">Rename</button>
+    <button disabled type="button" id="rename_loader" class=" hidden px-5 py-2.5 mr-2 mb-4 text-sm font-medium text-gray-900 bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:outline-none focus:ring-blue-700 focus:text-blue-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700 inline-flex items-center" style="transform: translateY(3px);">
+      <svg aria-hidden="true" role="status" class="inline w-4 h-4 mr-2 text-gray-200 animate-spin dark:text-gray-600" viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z" fill="currentColor"/>
+        <path d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z" fill="#1C64F2"/>
+      </svg>
+      Loading...
+    </button>
+  </div>
+  <label for="file_count" class="block mb-2 text-sm font-medium text-white">Files Found: <span class="bg-themeMain text-themeLow text-xs font-medium mr-2 px-2.5 py-0.5 rounded" id="file_count">00</span></label>
+  <div class="relative overflow-x-hidden shadow-md sm:rounded-lg mb-2">
+    <!-- add remove btn for files from table after scanning -->
+    <table id="file_display" class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+      <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+        <tr>
+          <th class="hidden">
+            id
+          </th>
+          <th scope="col" id="og_file_name" title="Sort" class="px-6 py-3 cursor-pointer">
+            Current File Name
+          </th>
+          <th scope="col" class="px-6 py-3">
+            New File Name
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+      </tbody>
+    </table>
+  </div>
+
+
+
+
+</div>
+<script src="https://code.jquery.com/jquery-3.6.4.min.js" integrity="sha256-oP6HI9z1XaZNBrJURtCoUT5SUnxFr8s3BzRl+cbzUq8=" crossorigin="anonymous"></script>
+<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js" integrity="sha256-lSjKY0/srUM9BE3dPm+c4fBo1dky2v27Gdjm2uoZaL0=" crossorigin="anonymous"></script>
+<script>
+  $(function() {
+    $( "tbody" ).sortable();
+    $( "tbody" ).disableSelection();
+  });
+  //directory submit
+  $('#directory_search').submit((e) => {
+    e.preventDefault();
+    $("tbody").empty();
+    var directoryValue = $("#directory_search #select_directory").val();
+    $.ajax({
+      url: "{{url_for('scan_directory')}}",
+      method: 'POST',
+      data: {
+        directory: directoryValue,
+      }
+    }).done(function(response) {
+      $('#current_dir').val(response['path']);
+      for (let x in response['file_list']) {
+        $("tbody").append('<tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"><td class="hidden">'+x+'</td><td scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">'+response['file_list'][x]+'</td><td class="px-6 py-4">-</td></tr>')
+        //console.log(x + ": "+ response['file_list'][x])
+      }
+      var count = Object.keys(response['file_list']).length;
+      $('#file_count').html(count);
+      $('#og_file_name').click();
+    }).fail(function(error) {
+      console.error('Error:', error);
+      alert('Invalid path!');
+    });
+  })
+  //file submit for rename
+  $('#rename_files').click((e) => {
+    $('#rename_files').toggleClass('hidden');
+    $('#rename_loader').toggleClass('hidden');
+    var tableContent = $('#file_display tbody tr');
+    var trElements = [];
+    if(tableContent.length > 0){
+      $(tableContent).each(function(index, tr) {
+        var id = $(tr).find('td:first-child').text();
+        var filename = $(tr).find('td:nth-child(2)').text();
+        
+        trElements.push({
+          id: id,
+          filename: filename
+        });
+      });
+      //console.log(trElements);
+      $.ajax({
+        url: "{{url_for('rename_directory')}}",
+        method: 'POST',
+        data: {
+          directory: $('#current_dir').val(),
+          style: $('#rename_style').val(),
+          file_list: JSON.stringify(trElements)
+        }
+      }).done(function(response) {
+        console.log('Done');
+      }).fail(function(error) {
+        console.error('Error:', error);
+      }).always(function() {
+        $('#rename_loader').toggleClass('hidden');
+        $('#rename_files').toggleClass('hidden');
+      });
+    }
+  });
+  //table sort
+  $('#og_file_name').click(function(){
+    var table = $(this).parents('table').eq(0)
+    var rows = table.find('tr:gt(0)').toArray().sort(comparer($(this).index()))
+    this.asc = !this.asc
+    if (!this.asc){rows = rows.reverse()}
+    for (var i = 0; i < rows.length; i++){table.append(rows[i])}
+  })
+  function comparer(index) {
+    return function(a, b) {
+      var valA = getCellValue(a, index), valB = getCellValue(b, index)
+      return $.isNumeric(valA) && $.isNumeric(valB) ? valA - valB : valA.toString().localeCompare(valB)
+    }
+  }
+  function getCellValue(row, index){ return $(row).children('td').eq(index).text() }
+  //directory selector
+  function call_directory(elem){
+    var dir_val = $(elem).attr('path');
+    if($(elem).parents('#path-tree').length == 1){
+      $("#path-nav-tree").append('<span class="text-xs font-medium mr-2 px-2.5 py-0.5 rounded bg-yellow-900 text-yellow-300 cursor-pointer inline-block" path="'+dir_val+'" onclick="call_directory(this)">'+$(elem).html()+'>'+'</span>');
+    }else if($(elem).parents('#path-nav-tree').length == 1){
+      $(elem).nextAll('span').remove();
+    } else{
+      $("#path-nav-tree").empty();
+    }
+    $("#directory_search #select_directory").val(dir_val);
+    $.ajax({
+      url: "{{url_for('get_dir_tree')}}",
+      method: 'POST',
+      data: {
+        directory: dir_val,
+      }
+    }).done(function(response) {
+      $("#path-tree").empty();
+      for (let x in response['dir_list']) {
+        $("#path-tree").append('<span class="text-xs font-medium mr-2 px-2.5 py-0.5 rounded bg-green-900 text-green-300 cursor-pointer inline-block" path="'+response['dir_list'][x]+'" onclick="call_directory(this)">'+x+'</span>')
+        //console.log(x + ": "+ response['dir_list'][x])
+      }
+      var count = Object.keys(response['dir_list']).length;
+      //console.log(count);
+    }).fail(function(error) {
+      console.error('Error:', error);
+    });
+  }
+</script>
+{% endblock %}
