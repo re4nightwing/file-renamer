@@ -13,9 +13,15 @@
     </div>
   </form>
   <div class="py-2 px-2 border rounded mb-4">
-    {% for drive in context.drives %}
-    <span class="text-xs font-medium mr-2 px-2.5 py-0.5 rounded bg-purple-900 text-purple-300 cursor-pointer" path="{{drive}}:\" onclick="call_directory(this)">{{drive}}:\</span>
-    {% endfor %}
+    <div class="block flex items-center justify-between">
+      <div class="drive-dirs">
+        {% for drive in context.drives %}
+        <span class="text-xs font-medium mr-2 px-2.5 py-0.5 rounded bg-purple-900 text-purple-300 cursor-pointer" path="{{drive}}:\" onclick="call_directory(this)">{{drive}}:\</span>
+        {% endfor %}
+      </div>
+      <img id="dir-expand" onclick="hideDirs(this)" src="{{url_for('static', filename='arrow_up_svg.svg')}}" class="inline hidden mx-2 cursor-pointer" alt="">
+    </div>
+    
     <div id="path-nav-tree"></div>
     <div id="path-tree"></div>
   </div>
@@ -45,8 +51,8 @@
           <th scope="col" id="og_file_name" title="Sort" class="px-6 py-3 cursor-pointer">
             Current File Name
           </th>
-          <th scope="col" class="px-6 py-3">
-            New File Name
+          <th scope="col" class="px-6 py-3 text-right">
+            Action
           </th>
         </tr>
       </thead>
@@ -54,10 +60,6 @@
       </tbody>
     </table>
   </div>
-
-
-
-
 </div>
 <script src="https://code.jquery.com/jquery-3.6.4.min.js" integrity="sha256-oP6HI9z1XaZNBrJURtCoUT5SUnxFr8s3BzRl+cbzUq8=" crossorigin="anonymous"></script>
 <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js" integrity="sha256-lSjKY0/srUM9BE3dPm+c4fBo1dky2v27Gdjm2uoZaL0=" crossorigin="anonymous"></script>
@@ -66,6 +68,14 @@
     $( "tbody" ).sortable();
     $( "tbody" ).disableSelection();
   });
+  //dir expand
+  function isEmpty( elem ){
+    return !$.trim(elem.html())
+  }
+  function hideDirs(elem){
+    $(elem).toggleClass('rotate-180');
+    $('#path-tree').fadeToggle('fast');
+  }
   //directory submit
   $('#directory_search').submit((e) => {
     e.preventDefault();
@@ -80,7 +90,7 @@
     }).done(function(response) {
       $('#current_dir').val(response['path']);
       for (let x in response['file_list']) {
-        $("tbody").append('<tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"><td class="hidden">'+x+'</td><td scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">'+response['file_list'][x]+'</td><td class="px-6 py-4">-</td></tr>')
+        $("tbody").append('<tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"><td class="hidden">'+x+'</td><td scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">'+response['file_list'][x]+'</td><td class="px-6 py-4 text-right"><button onclick="removeRow(this)" class="text-white focus:outline-none focus:ring-4 font-medium rounded-full px-3 py-2 text-xs text-center mr-2 mb-2 bg-red-600 hover:bg-red-700"><img src="{{url_for('static', filename='close_svg.svg')}}" class="inline scale-75" alt="">Remove</button></td></tr>')
         //console.log(x + ": "+ response['file_list'][x])
       }
       var count = Object.keys(response['file_list']).length;
@@ -166,9 +176,19 @@
       }
       var count = Object.keys(response['dir_list']).length;
       //console.log(count);
+      if(isEmpty($('#path-tree'))) {
+        $('#dir-expand').fadeOut('fast');
+      } else{
+        $('#dir-expand').fadeIn('fast');
+      }
     }).fail(function(error) {
       console.error('Error:', error);
     });
+  }
+  //delete row
+  function removeRow(elem) {
+    $(elem).closest('tr').remove();
+    $('#file_count').html(parseInt($('#file_count').html())-1);
   }
 </script>
 {% endblock %}

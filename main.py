@@ -10,7 +10,7 @@ from ctypes import windll
 import json, re, string
 
 app = Flask(__name__)
-app.debug = False #change this on GUI
+app.debug = True #change this on GUI
 
 def saybye():
   print("on_exit bye")
@@ -128,8 +128,8 @@ def about_page():
   return render_template('about.html')
 
 if __name__ == "__main__":
-  #app.run()
-  FlaskUI(
+  app.run()
+  """ FlaskUI(
     server=start_flask,
     server_kwargs={
       "app": app,
@@ -138,7 +138,7 @@ if __name__ == "__main__":
     },
     width=850,
     height=600,
-    on_shutdown=saybye).run()
+    on_shutdown=saybye).run() """
 
 
   #### pyvan main.py -nc --icon .\static\file_icon.ico
