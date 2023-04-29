@@ -2,7 +2,7 @@
 {% block title %}File Re-namer{% endblock %}
 
 {% block main %}
-<div class="container text-white m-8">
+<div class="container text-white m-8 mx-auto">
   <form id="directory_search" method="POST">
     <div class="mb-4">
       <label for="select_directory" class="block mb-2 text-sm font-medium text-white">Directory:</label>
@@ -61,12 +61,47 @@
     </table>
   </div>
 </div>
+<div class="block text-xs opacity-50 text-white fixed bottom-1 w-full pl-2">{{context.current_version}}</div>
+{% if context.new_version %}
+<div id="version-toast" class="notif-toast fixed flex items-center w-full max-w-xs p-4 space-x-4 text-gray-500 bg-white divide-x divide-gray-200 rounded-lg shadow right-5 bottom-5 dark:text-gray-400 dark:divide-gray-700 space-x dark:bg-gray-800" role="alert">
+  <div class="text-sm font-normal">New Version available. <a href="https://github.com/re4nightwing/file-renamer/releases/latest" target="_blank" class="text-teal-600 hover:underline"><b>{{context.new_version}}</b></a></div>
+</div>
+{% endif %}
+<div id="custom-context-menu" class="menu absolute w-48 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white hidden">
+  <a href="https://github.com/re4nightwing/file-renamer/releases/latest" target="_blank" class="block w-full px-4 py-2 border-b rounded-t-lg border-gray-200 cursor-pointer hover:bg-gray-100 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-700 focus:text-blue-700 dark:border-gray-600 dark:hover:bg-gray-600 dark:hover:text-white dark:focus:ring-gray-500 dark:focus:text-white">
+    <svg xmlns="http://www.w3.org/2000/svg" class="inline" width="24" height="24" viewBox="0 0 24 24" style="fill: rgba(255, 255, 255, 1);"><path d="M12.001 1.993C6.486 1.994 2 6.48 2 11.994c.001 5.514 4.487 10 10 10 5.515 0 10.001-4.486 10.001-10s-4.486-10-10-10.001zM12 19.994c-4.41 0-7.999-3.589-8-8 0-4.411 3.589-8 8.001-8.001 4.411.001 8 3.59 8 8.001s-3.589 8-8.001 8z"></path><path d="m12.001 8.001-4.005 4.005h3.005V16h2v-3.994h3.004z"></path></svg>
+    Check for Updates
+  </a>
+  <a href="https://github.com/re4nightwing/file-renamer/" target="_blank" class="block w-full px-4 py-2 rounded-b-lg border-gray-200 cursor-pointer hover:bg-gray-100 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-700 focus:text-blue-700 dark:border-gray-600 dark:hover:bg-gray-600 dark:hover:text-white dark:focus:ring-gray-500 dark:focus:text-white">
+    <svg xmlns="http://www.w3.org/2000/svg" class="inline" width="24" height="24" viewBox="0 0 24 24" style="fill: rgba(255, 255, 255, 1);"><path d="M12 2C6.486 2 2 6.486 2 12s4.486 10 10 10 10-4.486 10-10S17.514 2 12 2zm0 18c-4.411 0-8-3.589-8-8s3.589-8 8-8 8 3.589 8 8-3.589 8-8 8z"></path><path d="M11 11h2v6h-2zm0-4h2v2h-2z"></path></svg>
+    About
+  </a>
+</div>
 <script src="https://code.jquery.com/jquery-3.6.4.min.js" integrity="sha256-oP6HI9z1XaZNBrJURtCoUT5SUnxFr8s3BzRl+cbzUq8=" crossorigin="anonymous"></script>
 <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js" integrity="sha256-lSjKY0/srUM9BE3dPm+c4fBo1dky2v27Gdjm2uoZaL0=" crossorigin="anonymous"></script>
 <script>
   $(function() {
     $( "tbody" ).sortable();
     $( "tbody" ).disableSelection();
+
+    $('html').bind('contextmenu', function(e) {
+      e.preventDefault();
+      $('#custom-context-menu').css({
+        top: e.pageY + 'px',
+        left: e.pageX + 'px',
+        display: 'block'
+      });
+    });
+    $(document).bind('mousedown scroll', function(e) {
+      if (!$(e.target).parents('.menu').length > 0) {
+        $('.menu').hide();
+      }
+    });
+    $(document).keydown(function(e) {
+      if (e.keyCode === 27) {
+        $('.menu').hide();
+      }
+    });
   });
   //dir expand
   function isEmpty( elem ){
@@ -190,5 +225,9 @@
     $(elem).closest('tr').remove();
     $('#file_count').html(parseInt($('#file_count').html())-1);
   }
+  //toast disappear
+  $('.notif-toast').on('click', function() {
+    $(this).fadeOut();
+  })
 </script>
 {% endblock %}

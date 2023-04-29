@@ -25,9 +25,11 @@ __Option 02__
 - [x] Add rename pattern. (Ex: `Horimiya <ep>` => `Horimiya 01`, `Horimiya 02`, etc)
 - [ ] More customization over rename pattern. (Starting number (\<ep:02>) and make that work with multiple variables. (\<ep:02> of \<series:15>))
 - [x] Make browser menu directory list collapsible.
-- [ ] Create a custom right-click context menu.
+- [x] Create a custom right-click context menu.
 - [ ] Create counter measures for browser specific things like f5,f1 keys.
 - [ ] Add themes. (dark, light, dracula, nord) 
+- [x] Check for updates on the start up.
+- [x] Add notification toasts.
 
 
-__Submit any questions/issues you have! Fell free to fork it and improve it!__ 
+__Submit any questions/issues you have! Feel free to fork it and improve it!__ 

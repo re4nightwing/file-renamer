@@ -7,10 +7,41 @@ from flask import Flask, render_template, jsonify, request
 from flaskwebgui import FlaskUI
 from uuid import uuid4
 from ctypes import windll
-import json, re, string
+import json, re, string, requests, urllib.request, socket
+
 
 app = Flask(__name__)
-app.debug = True #change this on GUI
+app.debug = False #change this on GUI
+
+USERNAME = 're4nightwing'
+REPO_NAME = 'file-renamer'
+CURRENT_VERSION = 'v0.1.1'
+URL = f"https://api.github.com/repos/{USERNAME}/{REPO_NAME}/releases/latest"
+
+def check_internet_connection():
+  try:
+    urllib.request.urlopen('https://www.google.com', timeout=1)
+    return True
+  except urllib.request.URLError:
+    pass
+  try:
+    socket.gethostbyname('www.google.com')
+    return True
+  except socket.gaierror:
+    pass
+  return False
+
+def check_version(url:str, current_version:str):
+  if check_internet_connection():
+    response = requests.get(url)
+    data = json.loads(response.content)
+    latest_version = data["tag_name"]
+    if latest_version != current_version:
+      return latest_version
+    else:
+      return True
+  else:
+    return False
 
 def saybye():
   print("on_exit bye")
@@ -32,7 +63,6 @@ def get_drives():
       drives.append(letter)
     bitmask >>= 1
   return drives
-
 
 def get_file_ext(filename):
   parts = filename.split(".")
@@ -62,9 +92,16 @@ def make_file_name_list(no_of_files, filename_style):
   else:
     return False
 
+
 @app.route('/', methods=['GET', 'POST'])
 def index_page():
-  context = { 'drives': get_drives() }
+  context = {
+    'drives': get_drives(),
+    'current_version': CURRENT_VERSION
+  }
+  version_check = check_version(URL, CURRENT_VERSION)
+  if isinstance(version_check, str):
+    context['new_version'] = version_check
   return render_template('home.html', context=context)
 
 @app.route('/get_dir_tree', methods=['POST'])
@@ -128,8 +165,8 @@ def about_page():
   return render_template('about.html')
 
 if __name__ == "__main__":
-  app.run()
-  """ FlaskUI(
+  #app.run() #development
+  FlaskUI(
     server=start_flask,
     server_kwargs={
       "app": app,
@@ -138,7 +175,7 @@ if __name__ == "__main__":
     },
     width=850,
     height=600,
-    on_shutdown=saybye).run() """
+    on_shutdown=saybye).run()
 
 
   #### pyvan main.py -nc --icon .\static\file_icon.ico
