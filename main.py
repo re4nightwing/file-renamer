@@ -6,8 +6,7 @@ if sys.executable.endswith('pythonw.exe'):
 from flask import Flask, render_template, jsonify, request
 from flaskwebgui import FlaskUI
 from uuid import uuid4
-from ctypes import windll
-import json, re, string, requests, urllib.request, socket
+import json, re, string, requests, urllib.request, socket, platform
 
 
 app = Flask(__name__)
@@ -17,6 +16,13 @@ USERNAME = 're4nightwing'
 REPO_NAME = 'file-renamer'
 CURRENT_VERSION = 'v0.1.1'
 URL = f"https://api.github.com/repos/{USERNAME}/{REPO_NAME}/releases/latest"
+PLATFORM = 'Windows'
+
+if(platform.uname()[0] == 'Linux'):
+  PLATFORM = 'Linux'
+else:
+  from ctypes import windll
+
 
 def check_internet_connection():
   try:
@@ -44,7 +50,7 @@ def check_version(url:str, current_version:str):
     return False
 
 def saybye():
-  print("on_exit bye")
+  print("Thank you for using, bye!")
 
 def start_flask(**server_kwargs):
   app = server_kwargs.pop("app", None)
@@ -57,11 +63,16 @@ def start_flask(**server_kwargs):
 
 def get_drives():
   drives = []
-  bitmask = windll.kernel32.GetLogicalDrives()
-  for letter in string.ascii_uppercase:
-    if bitmask & 1:
-      drives.append(letter)
-    bitmask >>= 1
+  if(PLATFORM == 'Linux'):
+    for dir in os.listdir(os.path.expanduser("~")):
+      if not dir.startswith('.'):
+        drives.append(f'~/{dir}/')
+  else:
+    bitmask = windll.kernel32.GetLogicalDrives()
+    for letter in string.ascii_uppercase:
+      if bitmask & 1:
+        drives.append(f'{letter}:\\')
+      bitmask >>= 1
   return drives
 
 def get_file_ext(filename):
@@ -109,17 +120,21 @@ def get_dir_tree():
   context = {}
   dir_list = {}
   req_path = request.form['directory']
+  if PLATFORM == 'Linux':
+    req_path = os.path.expanduser(req_path)
   filenames = os.listdir(req_path)
   directories = [d for d in filenames if os.path.isdir(os.path.join(req_path, d))]
   directories.sort()
   for dir in directories:
-    dir_list[dir] = f'{req_path}\{dir}'
+    dir_list[dir] = f'{req_path}/{dir}'
   context['dir_list'] = dir_list
   return jsonify(context), 200
 
 @app.route('/scan_dir', methods=['POST'])
 def scan_directory():
   dir_path = request.form['directory']
+  if PLATFORM == 'Linux':
+    dir_path = os.path.expanduser(dir_path)
   context = {'path' : dir_path}
   if os.path.exists(dir_path) and os.path.isdir(dir_path):
     filenames = os.listdir(dir_path)

@@ -16,7 +16,7 @@
     <div class="block flex items-center justify-between">
       <div class="drive-dirs">
         {% for drive in context.drives %}
-        <span class="text-xs font-medium mr-2 px-2.5 py-0.5 rounded bg-purple-900 text-purple-300 cursor-pointer" path="{{drive}}:\" onclick="call_directory(this)">{{drive}}:\</span>
+        <span class="text-xs font-medium mr-2 px-2.5 py-0.5 rounded bg-purple-900 text-purple-300 cursor-pointer" path="{{drive}}" onclick="call_directory(this)">{{drive}}</span>
         {% endfor %}
       </div>
       <img id="dir-expand" onclick="hideDirs(this)" src="{{url_for('static', filename='arrow_up_svg.svg')}}" class="inline hidden mx-2 cursor-pointer" alt="">
